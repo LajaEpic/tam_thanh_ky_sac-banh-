@@ -370,7 +370,7 @@ app.post('/api/admin/media/upload', requireAdmin, (req, res, next) => {
       const file = req.files[0];
       const ext = path.extname(file.originalname).toLowerCase();
       let type = 'image';
-      if (['.mp4', '.webm', '.mov', '.ogg'].includes(ext)) type = 'video';
+      if (['.mp4', '.webm', '.mov', '.ogg', '.m4v', '.mkv'].includes(ext)) type = 'video';
       else if (ext === '.pdf') type = 'pdf';
 
       state.stage.media[slot] = {
@@ -381,6 +381,7 @@ app.post('/api/admin/media/upload', requireAdmin, (req, res, next) => {
         totalPages: type === 'pdf' ? (Number(req.body.totalPages) || 46) : 1
       };
     }
+    saveState();
     broadcast();
     return res.json({ ok: true, slot, media: state.stage.media[slot] });
   }
@@ -405,6 +406,7 @@ app.post('/api/admin/media/upload', requireAdmin, (req, res, next) => {
         url: `/uploads/${filename}`,
         totalPages: type === 'pdf' ? (Number(req.body.totalPages) || 46) : 1
       };
+      saveState();
       broadcast();
       return res.json({ ok: true, slot, media: state.stage.media[slot] });
     } catch (err) {
@@ -421,6 +423,7 @@ app.post('/api/admin/media/remove', requireAdmin, (req, res) => {
   if (!slot) return res.status(400).json({ error: 'Thiếu slot' });
   if (state.stage.media && state.stage.media[slot]) {
     delete state.stage.media[slot];
+    saveState();
     broadcast();
   }
   res.json({ ok: true });

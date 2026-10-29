@@ -5,8 +5,9 @@
   "stage": {
     "mode": "welcome",
     "slide": 1,
-    "scene": "song"
+    "scene": "song",
+    "media": {}
   },
   "people": {},
-  "updatedAt": 1730000000000
+  "updatedAt": 1793285302452
 }

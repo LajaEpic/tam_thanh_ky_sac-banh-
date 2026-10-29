@@ -251,8 +251,83 @@ class AppHandler(SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         length = int(self.headers.get('Content-Length', 0))
-        body = self.rfile.read(length).decode('utf-8') if length else '{}'
+        content_type = self.headers.get('Content-Type', '')
+        raw_body = self.rfile.read(length) if length else b''
+
+        if 'multipart/form-data' in content_type:
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            if not token:
+                return self.send_json({"error": "Yêu cầu quyền quản trị"}, 401)
+
+            from email.parser import BytesParser
+            from email.policy import default
+            msg = BytesParser(policy=default).parsebytes(
+                b'Content-Type: ' + content_type.encode('latin1') + b'\r\n\r\n' + raw_body
+            )
+            form_data = {}
+            form_files = []
+            for part in msg.iter_parts():
+                name = part.get_param('name', header='content-disposition')
+                filename = part.get_filename()
+                if filename:
+                    payload = part.get_payload(decode=True)
+                    form_files.append((filename, payload))
+                elif name:
+                    form_data[name] = part.get_content().strip()
+
+            if path == '/api/admin/media/upload':
+                slot = form_data.get('slot')
+                if not slot:
+                    return self.send_json({"error": "Thiếu định danh ô (slot)"}, 400)
+                if not form_files:
+                    return self.send_json({"error": "Không nhận được file hợp lệ"}, 400)
+
+                out_dir = os.path.join(os.path.dirname(__file__), 'public', 'uploads')
+                os.makedirs(out_dir, exist_ok=True)
+
+                if slot == 'book' and len(form_files) > 1:
+                    import re
+                    def nat_sort(f):
+                        return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', f[0])]
+                    form_files.sort(key=nat_sort)
+                    pages = []
+                    for fname, fbytes in form_files:
+                        safe_name = f"{int(time.time()*1000)}-{os.path.basename(fname)}"
+                        with open(os.path.join(out_dir, safe_name), 'wb') as pf:
+                            pf.write(fbytes)
+                        pages.append(f"/uploads/{safe_name}")
+                    media_info = {
+                        "type": "book",
+                        "format": "images",
+                        "name": f"{len(pages)} trang ảnh slide",
+                        "url": pages[0],
+                        "pages": pages,
+                        "totalPages": len(pages)
+                    }
+                else:
+                    fname, fbytes = form_files[0]
+                    ext = os.path.splitext(fname)[1].lower()
+                    safe_name = f"{int(time.time()*1000)}-{os.path.basename(fname)}"
+                    with open(os.path.join(out_dir, safe_name), 'wb') as pf:
+                        pf.write(fbytes)
+                    mtype = 'video' if ext in ['.mp4', '.webm', '.mov', '.ogg', '.m4v', '.mkv'] else 'pdf' if ext == '.pdf' else 'image'
+                    total_pages = int(form_data.get('totalPages', 46 if mtype == 'pdf' else 1))
+                    media_info = {
+                        "type": mtype,
+                        "format": ext.replace('.', ''),
+                        "name": fname,
+                        "url": f"/uploads/{safe_name}",
+                        "totalPages": total_pages
+                    }
+                state.setdefault('stage', {}).setdefault('media', {})[slot] = media_info
+                save_state()
+                broadcast()
+                return self.send_json({"ok": True, "slot": slot, "media": media_info})
+
+            return self.send_json({"error": "Endpoint không hỗ trợ multipart"}, 400)
+
         try:
+            body = raw_body.decode('utf-8', errors='replace') if raw_body else '{}'
             data = json.loads(body)
         except:
             data = {}
@@ -332,6 +407,7 @@ class AppHandler(SimpleHTTPRequestHandler):
             slot = data.get('slot')
             if slot and 'media' in state.setdefault('stage', {}):
                 state['stage']['media'].pop(slot, None)
+                save_state()
                 broadcast()
             return self.send_json({"ok": True})
 
@@ -356,7 +432,7 @@ class AppHandler(SimpleHTTPRequestHandler):
                     f.write(file_bytes)
                 
                 ext = os.path.splitext(filename)[1].lower()
-                mtype = 'video' if ext in ['.mp4', '.webm', '.mov', '.ogg'] else 'pdf' if ext == '.pdf' else 'image'
+                mtype = 'video' if ext in ['.mp4', '.webm', '.mov', '.ogg', '.m4v', '.mkv'] else 'pdf' if ext == '.pdf' else 'image'
                 media_info = {
                     "type": mtype,
                     "format": ext.replace('.', ''),
@@ -365,6 +441,7 @@ class AppHandler(SimpleHTTPRequestHandler):
                     "totalPages": int(data.get('totalPages', 46 if mtype == 'pdf' else 1))
                 }
                 state.setdefault('stage', {}).setdefault('media', {})[slot] = media_info
+                save_state()
                 broadcast()
                 return self.send_json({"ok": True, "slot": slot, "media": media_info})
 
