@@ -197,6 +197,7 @@ function getPublicState() {
     phase: state.phase,
     unlocked: state.unlocked,
     stage: state.stage,
+    questions: state.questions || DEFAULT_QUESTIONS,
     counts: getCounts(),
     updatedAt: state.updatedAt
   };
