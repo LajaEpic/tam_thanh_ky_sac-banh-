@@ -23,6 +23,78 @@ const DATA_FILE = path.join(__dirname, 'data', 'session.json');
 let adminToken = 'admin-' + crypto.randomBytes(16).toString('hex');
 
 // Dữ liệu đáp án chuẩn cho 6 bến
+
+// Dữ liệu câu hỏi mặc định cho 6 bến
+const DEFAULT_QUESTIONS = {
+  1: [
+    {
+      id: 'q1',
+      prompt: 'Bạn muốn đến vùng đất có mạng lưới <strong>kênh rạch và văn hóa chợ nổi</strong>. Hãy chọn tuyến phù hợp.',
+      art: '<div class="task-illustration"><div class="canal-labels"><span>ĐÔNG NAM BỘ</span><span>TÂY NAM BỘ</span></div><div class="canal-bank"></div><div class="canal-water"></div><div class="canal-boat" id="canalBoat">🛶</div></div>',
+      options: [
+        { id: 'dong-nam-bo', icon: '⛰️', text: 'Đông Nam Bộ', desc: 'Địa hình tương đối cao, nhiều đô thị và công nghiệp', isCorrect: false },
+        { id: 'tay-nam-bo', icon: '🌊', text: 'Tây Nam Bộ', desc: 'Mạng lưới kênh rạch dày đặc, chợ nổi, đồng bằng phù sa', isCorrect: true }
+      ]
+    }
+  ],
+  2: [
+    {
+      id: 'q1',
+      prompt: 'Ghe của Chị Hai đang bán <strong>dứa</strong>. Bạn sẽ treo món hàng nào lên cây bẹo để khách từ xa nhận ra?',
+      art: '<div class="pole-scene"><div class="pole-stick"></div><div class="pole-fruit" id="poleFruit">🍍</div><div class="pole-boat"></div></div>',
+      options: [
+        { id: 'dua', icon: '🍍', text: 'Dứa', desc: '', isCorrect: true },
+        { id: 'dua-dua', icon: '🥥', text: 'Dừa', desc: '', isCorrect: false },
+        { id: 'chom-chom', icon: '🍒', text: 'Chôm chôm', desc: '', isCorrect: false }
+      ]
+    }
+  ],
+  3: [
+    {
+      id: 'q1',
+      prompt: 'Trong ba hình ảnh dưới đây, đâu là <strong>di sản văn hóa phi vật thể</strong>?',
+      options: [
+        { id: 'dinh-doc-lap', icon: '🏛️', text: 'Dinh Độc Lập', desc: 'Công trình kiến trúc – lịch sử', isCorrect: false },
+        { id: 'don-ca-tai-tu', icon: '🎶', text: 'Đờn ca tài tử', desc: 'Nghệ thuật trình diễn đặc trưng của Nam Bộ', isCorrect: true },
+        { id: 'rung-can-gio', icon: '🌳', text: 'Rừng ngập mặn Cần Giờ', desc: 'Hệ sinh thái thiên nhiên', isCorrect: false }
+      ]
+    }
+  ],
+  4: [
+    {
+      id: 'q1',
+      prompt: 'Giúp Chị Ba xếp giỏ dự trữ: người dân có thể <strong>chế biến cá theo những cách nào để bảo quản lâu hơn</strong>? Chọn hai cách.',
+      art: '<div class="basket-scene"><div class="basket-items" id="basketItems"></div><span class="basket">🧺</span></div>',
+      options: [
+        { id: 'lam-mam', icon: '🫙', text: 'Làm mắm', desc: 'Dùng kỹ thuật lên men và muối', isCorrect: true },
+        { id: 'phoi-kho', icon: '🐟', text: 'Phơi khô', desc: 'Giảm độ ẩm để bảo quản', isCorrect: true },
+        { id: 'an-ngay', icon: '🍲', text: 'Ăn ngay', desc: 'Dùng trong bữa ăn hiện tại', isCorrect: false },
+        { id: 'de-tu-nhien', icon: '🌡️', text: 'Để nguyên ở nhiệt độ thường', desc: 'Không xử lý hay bảo quản', isCorrect: false }
+      ]
+    }
+  ],
+  5: [
+    {
+      id: 'q1',
+      prompt: 'Một người biết đến hoạt động cộng đồng qua <strong>lời giới thiệu của hàng xóm thân thiết</strong>. Nguồn thông tin nào dễ tạo sự quan tâm ban đầu hơn trong tình huống này?',
+      options: [
+        { id: 'nguoi-la', icon: '❔', text: 'Một người lạ chưa kiểm chứng', desc: 'Thông tin không có nguồn xác nhận', isCorrect: false },
+        { id: 'nguoi-quen-tin-cay', icon: '🤝', text: 'Người quen đáng tin', desc: 'Có lời chia sẻ cụ thể và thông tin rõ ràng', isCorrect: true }
+      ]
+    }
+  ],
+  6: [
+    {
+      id: 'q1',
+      prompt: 'Bạn đang mời bà con <strong>dọn vệ sinh bến sông</strong>. Hãy chọn lời mời rõ ràng, thiết thực và dễ tham gia nhất.',
+      options: [
+        { id: 'chung-chung', icon: '☁️', text: 'Cùng nâng cao nhận thức vì môi trường bền vững!', desc: '', isCorrect: false },
+        { id: 'loi-moi-cu-the', icon: '📍', text: '7 giờ sáng Chủ nhật, bà con tập trung tại nhà văn hóa để cùng dọn sạch bến sông', desc: '', isCorrect: true }
+      ]
+    }
+  ]
+};
+
 const ANSWERS = {
   1: ['tay-nam-bo'],
   2: ['dua'],
@@ -140,8 +212,19 @@ function getPersonSummary(p) {
   };
 }
 
+function getExpectedAnswers(station) {
+  const qs = (state.questions && (state.questions[station] || state.questions[String(station)])) || DEFAULT_QUESTIONS[station] || [];
+  const corrects = [];
+  for (const q of qs) {
+    for (const opt of q.options || []) {
+      if (opt.isCorrect) corrects.push(opt.id);
+    }
+  }
+  return corrects.length ? corrects : (ANSWERS[station] || []);
+}
+
 function isAnswerCorrect(station, answers) {
-  const correct = ANSWERS[station] || [];
+  const correct = getExpectedAnswers(station);
   if (!Array.isArray(answers)) return false;
   const setA = [...new Set(answers)].sort().join();
   const setB = [...new Set(correct)].sort().join();
@@ -415,6 +498,42 @@ app.post('/api/admin/media/upload', requireAdmin, (req, res, next) => {
   }
 
   return res.status(400).json({ error: 'Không nhận được file hợp lệ' });
+});
+
+
+// 10. Quản lý câu hỏi bến
+// 10.1 Cập nhật câu hỏi
+app.post('/api/admin/questions', requireAdmin, (req, res) => {
+  const { questions, station } = req.body;
+  if (!questions && !station) return res.status(400).json({ error: 'Thiếu dữ liệu câu hỏi' });
+
+  state.questions = state.questions || JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+
+  if (station && questions) {
+    state.questions[station] = questions;
+  } else if (questions && typeof questions === 'object') {
+    state.questions = questions;
+  }
+
+  saveState();
+  broadcast();
+  res.json({ ok: true, questions: state.questions });
+});
+
+// 10.2 Khôi phục câu hỏi mặc định
+app.post('/api/admin/questions/reset', requireAdmin, (req, res) => {
+  const { station } = req.body;
+  state.questions = state.questions || JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+
+  if (station && DEFAULT_QUESTIONS[station]) {
+    state.questions[station] = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS[station]));
+  } else {
+    state.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+  }
+
+  saveState();
+  broadcast();
+  res.json({ ok: true, questions: state.questions });
 });
 
 // 9.2 Gỡ bỏ media của một ô (quay về mặc định)

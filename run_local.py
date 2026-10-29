@@ -24,6 +24,77 @@ PORT = int(os.environ.get('PORT', 3000))
 ADMIN_PIN = os.environ.get('ADMIN_PIN', 'nambo2026')
 DATA_FILE = os.path.join(os.path.dirname(__file__), 'data', 'session.json')
 
+
+DEFAULT_QUESTIONS = {
+    1: [
+        {
+            "id": "q1",
+            "prompt": "Bạn muốn đến vùng đất có mạng lưới <strong>kênh rạch và văn hóa chợ nổi</strong>. Hãy chọn tuyến phù hợp.",
+            "art": '<div class="task-illustration"><div class="canal-labels"><span>ĐÔNG NAM BỘ</span><span>TÂY NAM BỘ</span></div><div class="canal-bank"></div><div class="canal-water"></div><div class="canal-boat" id="canalBoat">🛶</div></div>',
+            "options": [
+                {"id": "dong-nam-bo", "icon": "⛰️", "text": "Đông Nam Bộ", "desc": "Địa hình tương đối cao, nhiều đô thị và công nghiệp", "isCorrect": False},
+                {"id": "tay-nam-bo", "icon": "🌊", "text": "Tây Nam Bộ", "desc": "Mạng lưới kênh rạch dày đặc, chợ nổi, đồng bằng phù sa", "isCorrect": True}
+            ]
+        }
+    ],
+    2: [
+        {
+            "id": "q1",
+            "prompt": "Ghe của Chị Hai đang bán <strong>dứa</strong>. Bạn sẽ treo món hàng nào lên cây bẹo để khách từ xa nhận ra?",
+            "art": '<div class="pole-scene"><div class="pole-stick"></div><div class="pole-fruit" id="poleFruit">🍍</div><div class="pole-boat"></div></div>',
+            "options": [
+                {"id": "dua", "icon": "🍍", "text": "Dứa", "desc": "", "isCorrect": True},
+                {"id": "dua-dua", "icon": "🥥", "text": "Dừa", "desc": "", "isCorrect": False},
+                {"id": "chom-chom", "icon": "🍒", "text": "Chôm chôm", "desc": "", "isCorrect": False}
+            ]
+        }
+    ],
+    3: [
+        {
+            "id": "q1",
+            "prompt": "Trong ba hình ảnh dưới đây, đâu là <strong>di sản văn hóa phi vật thể</strong>?",
+            "options": [
+                {"id": "dinh-doc-lap", "icon": "🏛️", "text": "Dinh Độc Lập", "desc": "Công trình kiến trúc – lịch sử", "isCorrect": False},
+                {"id": "don-ca-tai-tu", "icon": "🎶", "text": "Đờn ca tài tử", "desc": "Nghệ thuật trình diễn đặc trưng của Nam Bộ", "isCorrect": True},
+                {"id": "rung-can-gio", "icon": "🌳", "text": "Rừng ngập mặn Cần Giờ", "desc": "Hệ sinh thái thiên nhiên", "isCorrect": False}
+            ]
+        }
+    ],
+    4: [
+        {
+            "id": "q1",
+            "prompt": "Giúp Chị Ba xếp giỏ dự trữ: người dân có thể <strong>chế biến cá theo những cách nào để bảo quản lâu hơn</strong>? Chọn hai cách.",
+            "art": '<div class="basket-scene"><div class="basket-items" id="basketItems"></div><span class="basket">🧺</span></div>',
+            "options": [
+                {"id": "lam-mam", "icon": "🫙", "text": "Làm mắm", "desc": "Dùng kỹ thuật lên men và muối", "isCorrect": True},
+                {"id": "phoi-kho", "icon": "🐟", "text": "Phơi khô", "desc": "Giảm độ ẩm để bảo quản", "isCorrect": True},
+                {"id": "an-ngay", "icon": "🍲", "text": "Ăn ngay", "desc": "Dùng trong bữa ăn hiện tại", "isCorrect": False},
+                {"id": "de-tu-nhien", "icon": "🌡️", "text": "Để nguyên ở nhiệt độ thường", "desc": "Không xử lý hay bảo quản", "isCorrect": False}
+            ]
+        }
+    ],
+    5: [
+        {
+            "id": "q1",
+            "prompt": "Một người biết đến hoạt động cộng đồng qua <strong>lời giới thiệu của hàng xóm thân thiết</strong>. Nguồn thông tin nào dễ tạo sự quan tâm ban đầu hơn trong tình huống này?",
+            "options": [
+                {"id": "nguoi-la", "icon": "❔", "text": "Một người lạ chưa kiểm chứng", "desc": "Thông tin không có nguồn xác nhận", "isCorrect": False},
+                {"id": "nguoi-quen-tin-cay", "icon": "🤝", "text": "Người quen đáng tin", "desc": "Có lời chia sẻ cụ thể và thông tin rõ ràng", "isCorrect": True}
+            ]
+        }
+    ],
+    6: [
+        {
+            "id": "q1",
+            "prompt": "Bạn đang mời bà con <strong>dọn vệ sinh bến sông</strong>. Hãy chọn lời mời rõ ràng, thiết thực và dễ tham gia nhất.",
+            "options": [
+                {"id": "chung-chung", "icon": "☁️", "text": "Cùng nâng cao nhận thức vì môi trường bền vững!", "desc": "", "isCorrect": False},
+                {"id": "loi-moi-cu-the", "icon": "📍", "text": "7 giờ sáng Chủ nhật, bà con tập trung tại nhà văn hóa để cùng dọn sạch bến sông", "desc": "", "isCorrect": True}
+            ]
+        }
+    ]
+}
+
 ANSWERS = {
     1: ['tay-nam-bo'],
     2: ['dua'],
@@ -53,6 +124,9 @@ def load_state():
                 saved = json.load(f)
                 state.update(saved)
                 state['people'] = state.get('people', {})
+                if 'questions' not in state:
+                    import copy
+                    state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
                 return
         except Exception as e:
             print(f"[DB] Lỗi đọc session.json: {e}")
@@ -65,6 +139,16 @@ def save_state():
             json.dump(state, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[DB] Lỗi ghi session.json: {e}")
+
+
+def get_expected_answers(station):
+    qs = state.get('questions', {}).get(str(station)) or state.get('questions', {}).get(station) or DEFAULT_QUESTIONS.get(station, [])
+    corrects = []
+    for q in qs:
+        for opt in q.get('options', []):
+            if opt.get('isCorrect'):
+                corrects.append(opt.get('id'))
+    return corrects if corrects else ANSWERS.get(station, [])
 
 def get_counts():
     ps = list(state.get('people', {}).values())
@@ -84,6 +168,7 @@ def get_public_state():
         "phase": state.get("phase", "intro"),
         "unlocked": state.get("unlocked", []),
         "stage": state.get("stage", {"mode": "welcome", "slide": 1, "scene": "song"}),
+        "questions": state.get("questions", DEFAULT_QUESTIONS),
         "counts": get_counts(),
         "updatedAt": state.get("updatedAt", int(time.time() * 1000))
     }
@@ -356,7 +441,7 @@ class AppHandler(SimpleHTTPRequestHandler):
 
             exp_backup = BACKUP_CODES[station - 1] if 1 <= station <= 6 else ''
             is_backup = backup and backup == exp_backup
-            is_task = sorted(list(set(answers))) == sorted(list(set(ANSWERS.get(station, []))))
+            is_task = sorted(list(set(answers))) == sorted(list(set(get_expected_answers(station))))
 
             if not is_backup and not is_task:
                 return self.send_json({"error": "Đáp án chưa đúng"}, 400)
@@ -402,6 +487,45 @@ class AppHandler(SimpleHTTPRequestHandler):
             stage['scene'] = data.get('scene', stage.get('scene', 'song'))
             broadcast()
             return self.send_json({"ok": True})
+
+
+        if path == '/api/admin/questions':
+            qs_data = data.get('questions')
+            st_data = data.get('station')
+            if not qs_data and not st_data:
+                return self.send_json({"error": "Thiếu dữ liệu câu hỏi"}, 400)
+            
+            import copy
+            if 'questions' not in state:
+                state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
+            
+            if st_data and qs_data is not None:
+                state['questions'][str(st_data)] = qs_data
+                state['questions'][int(st_data)] = qs_data
+            elif qs_data and isinstance(qs_data, dict):
+                state['questions'] = qs_data
+            
+            save_state()
+            broadcast()
+            return self.send_json({"ok": True, "questions": state['questions']})
+
+        if path == '/api/admin/questions/reset':
+            st_data = data.get('station')
+            import copy
+            if 'questions' not in state:
+                state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
+            
+            if st_data and (int(st_data) in DEFAULT_QUESTIONS):
+                st_int = int(st_data)
+                def_q = copy.deepcopy(DEFAULT_QUESTIONS[st_int])
+                state['questions'][str(st_int)] = def_q
+                state['questions'][st_int] = def_q
+            else:
+                state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
+            
+            save_state()
+            broadcast()
+            return self.send_json({"ok": True, "questions": state['questions']})
 
         if path == '/api/admin/media/remove':
             slot = data.get('slot')
