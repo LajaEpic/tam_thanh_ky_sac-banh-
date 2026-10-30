@@ -180,6 +180,7 @@ def person_summary(p):
         "id": p.get("id"),
         "name": p.get("name"),
         "stamps": p.get("stamps", []),
+        "failed": p.get("failed", []),
         "joinedAt": p.get("joinedAt")
     }
 
@@ -422,10 +423,24 @@ class AppHandler(SimpleHTTPRequestHandler):
             if not name:
                 return self.send_json({"error": "Cần có biệt danh"}, 400)
             pid = f"user-{int(time.time()*1000)}-{os.urandom(2).hex()}"
-            person = {"id": pid, "name": name, "stamps": [], "joinedAt": int(time.time()*1000)}
+            person = {"id": pid, "name": name, "stamps": [], "failed": [], "joinedAt": int(time.time()*1000)}
             state['people'][pid] = person
             broadcast()
             return self.send_json({"person": person_summary(person), "state": get_public_state()})
+
+        if path == '/api/fail':
+            pid = data.get('id')
+            station = int(data.get('station', 0))
+            person = state.get('people', {}).get(pid)
+            if not person:
+                return self.send_json({"error": "Không tìm thấy sổ"}, 404)
+            if 'failed' not in person:
+                person['failed'] = []
+            if station not in person['failed'] and station not in person.get('stamps', []):
+                person['failed'].append(station)
+                person['failed'].sort()
+                broadcast()
+            return self.send_json({"ok": True, "person": person_summary(person)})
 
         if path == '/api/complete':
             pid = data.get('id')
@@ -438,6 +453,8 @@ class AppHandler(SimpleHTTPRequestHandler):
                 return self.send_json({"error": "Không tìm thấy sổ"}, 404)
             if station not in state.get('unlocked', []):
                 return self.send_json({"error": "Bến chưa mở"}, 409)
+            if station in person.get('failed', []):
+                return self.send_json({"error": "Bạn đã lỡ mất con dấu của bến này."}, 409)
 
             exp_backup = BACKUP_CODES[station - 1] if 1 <= station <= 6 else ''
             is_backup = backup and backup == exp_backup

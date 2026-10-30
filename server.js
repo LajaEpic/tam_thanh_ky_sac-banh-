@@ -209,6 +209,7 @@ function getPersonSummary(p) {
     id: p.id,
     name: p.name,
     stamps: p.stamps || [],
+    failed: p.failed || [],
     joinedAt: p.joinedAt
   };
 }
@@ -315,6 +316,7 @@ app.post('/api/join', (req, res) => {
     id,
     name,
     stamps: [],
+    failed: [],
     joinedAt: Date.now()
   };
 
@@ -325,6 +327,23 @@ app.post('/api/join', (req, res) => {
     person: getPersonSummary(newPerson),
     state: getPublicState()
   });
+});
+
+// Khán giả trả lời sai và bị khóa bến (lỡ dấu)
+app.post('/api/fail', (req, res) => {
+  const { id, station } = req.body;
+  const stNum = Number(station);
+  const person = state.people[id];
+  if (!person) {
+    return res.status(404).json({ error: 'Không tìm thấy sổ hành trình của bạn' });
+  }
+  person.failed = person.failed || [];
+  if (!person.failed.includes(stNum) && !person.stamps.includes(stNum)) {
+    person.failed.push(stNum);
+    person.failed.sort((a, b) => a - b);
+    saveState();
+  }
+  res.json({ ok: true, person: getPersonSummary(person) });
 });
 
 // 4. Du khách hoàn thành thử thách tại một bến
@@ -341,6 +360,10 @@ app.post('/api/complete', (req, res) => {
   }
 
   const backupCodeExpected = BACKUP_CODES[stNum - 1];
+
+  if (person.failed && person.failed.includes(stNum)) {
+    return res.status(409).json({ error: 'Bạn đã lỡ mất con dấu của bến này.' });
+  }
 
   if (!person.stamps.includes(stNum)) {
     const isBackupValid = backup && String(backup).toUpperCase() === backupCodeExpected;
