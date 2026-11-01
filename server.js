@@ -533,10 +533,15 @@ app.post('/api/admin/questions', requireAdmin, (req, res) => {
 
   state.questions = state.questions || JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
 
-  if (station && questions) {
-    state.questions[station] = questions;
+  const stNum = Number(station);
+  if (stNum && questions) {
+    state.questions[stNum] = questions;
+    state.questions[String(stNum)] = questions;
   } else if (questions && typeof questions === 'object') {
     state.questions = questions;
+    for (let d = 1; d <= 6; d++) {
+      if (questions[d]) state.questions[String(d)] = questions[d];
+    }
   }
 
   saveState();
@@ -544,15 +549,20 @@ app.post('/api/admin/questions', requireAdmin, (req, res) => {
   res.json({ ok: true, questions: state.questions });
 });
 
-// 10.2 Khôi phục câu hỏi mặc định
+// 10.2 Khôi phục câu hỏi mặc định (bến cụ thể hoặc tất cả 6 bến)
 app.post('/api/admin/questions/reset', requireAdmin, (req, res) => {
   const { station } = req.body;
   state.questions = state.questions || JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
 
-  if (station && DEFAULT_QUESTIONS[station]) {
-    state.questions[station] = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS[station]));
+  const stNum = Number(station);
+  if (stNum && stNum >= 1 && stNum <= 6 && DEFAULT_QUESTIONS[stNum]) {
+    state.questions[stNum] = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS[stNum]));
+    state.questions[String(stNum)] = state.questions[stNum];
   } else {
     state.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+    for (let d = 1; d <= 6; d++) {
+      state.questions[String(d)] = state.questions[d];
+    }
   }
 
   saveState();

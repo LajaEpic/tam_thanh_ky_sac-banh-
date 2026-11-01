@@ -516,11 +516,22 @@ class AppHandler(SimpleHTTPRequestHandler):
             if 'questions' not in state:
                 state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
             
-            if st_data and qs_data is not None:
-                state['questions'][str(st_data)] = qs_data
-                state['questions'][int(st_data)] = qs_data
+            try:
+                st_int = int(st_data)
+            except (ValueError, TypeError):
+                st_int = None
+
+            if st_int and qs_data is not None:
+                state['questions'][st_int] = qs_data
+                state['questions'][str(st_int)] = qs_data
             elif qs_data and isinstance(qs_data, dict):
                 state['questions'] = qs_data
+                for k, v in list(qs_data.items()):
+                    try:
+                        state['questions'][int(k)] = v
+                        state['questions'][str(k)] = v
+                    except (ValueError, TypeError):
+                        pass
             
             save_state()
             broadcast()
@@ -532,13 +543,19 @@ class AppHandler(SimpleHTTPRequestHandler):
             if 'questions' not in state:
                 state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
             
-            if st_data and (int(st_data) in DEFAULT_QUESTIONS):
+            try:
                 st_int = int(st_data)
+            except (ValueError, TypeError):
+                st_int = None
+
+            if st_int and (st_int in DEFAULT_QUESTIONS):
                 def_q = copy.deepcopy(DEFAULT_QUESTIONS[st_int])
-                state['questions'][str(st_int)] = def_q
                 state['questions'][st_int] = def_q
+                state['questions'][str(st_int)] = def_q
             else:
                 state['questions'] = copy.deepcopy(DEFAULT_QUESTIONS)
+                for d in range(1, 7):
+                    state['questions'][str(d)] = copy.deepcopy(DEFAULT_QUESTIONS[d])
             
             save_state()
             broadcast()
