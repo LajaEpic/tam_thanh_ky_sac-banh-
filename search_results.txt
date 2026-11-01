@@ -1,0 +1,51 @@
+=== index.html ===
+21: .operator-page{min-height:100vh;background:#f5f0e6;padding:25px 25px 45px}.operator-wrap{max-width:1120px;margin:auto}.login-card{max-width:415px;text-align:cen
+23: .stage-page{background:#112e2a;color:#fff;overflow:hidden;font-family:var(--sans)}.stage-canvas{position:fixed;inset:0;background:#14342f;overflow:hidden}.stage
+25: @media(max-width:760px){.operator-page{padding:16px 12px}.operator-header{align-items:flex-start;flex-direction:column}.summary-stats{grid-template-columns:repe
+26: @media(max-width:480px){.visitor-page{padding:18px 12px 36px}.passport-cover{padding:34px 26px 23px;min-height:670px}.passport-cover:before{inset:9px}.passport-
+27: @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+29: .preview-nav{position:fixed;bottom:12px;left:12px;z-index:200;background:#fcf8ebf5;color:#244941;padding:7px 9px;border-radius:8px;display:flex;align-items:cent
+147: const bodies={"visitor": "\n <div class=\"paper-fibers\" aria-hidden=\"true\"></div>\n <div id=\"connection\" class=\"connection-pill\" aria-live=\"polite\"><sp
+251: function playStampSound(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC(),duration=.14,length=Math.ceil(ctx.sampleR
+252: </script><script>if(mode==='visitor'){(new Function("'use strict';\nlet person=null,siteState=null,viewStop=0,stationStep={},stationAnswers={},stationHasError={
+253: if(mode==='control'){(new Function("'use strict';\nconst IDB='ttks.sauBen.stageAssets';\nconst assetChannel=('BroadcastChannel' in window)?new BroadcastChannel(
+254: if(mode==='stage'){(new Function("'use strict';\nlet live={activeStation:0,phase:'intro',unlocked:[],stage:{mode:'welcome',slide:1,scene:'song'},counts:{visitor
+=== public/index.html ===
+21: .operator-page{min-height:100vh;background:#f5f0e6;padding:25px 25px 45px}.operator-wrap{max-width:1120px;margin:auto}.login-card{max-width:415px;text-align:cen
+23: .stage-page{background:#112e2a;color:#fff;overflow:hidden;font-family:var(--sans)}.stage-canvas{position:fixed;inset:0;background:#14342f;overflow:hidden}.stage
+25: @media(max-width:760px){.operator-page{padding:16px 12px}.operator-header{align-items:flex-start;flex-direction:column}.summary-stats{grid-template-columns:repe
+26: @media(max-width:480px){.visitor-page{padding:18px 12px 36px}.passport-cover{padding:34px 26px 23px;min-height:670px}.passport-cover:before{inset:9px}.passport-
+27: @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+29: .preview-nav{position:fixed;bottom:12px;left:12px;z-index:200;background:#fcf8ebf5;color:#244941;padding:7px 9px;border-radius:8px;display:flex;align-items:cent
+147: const bodies={"visitor": "\n <div class=\"paper-fibers\" aria-hidden=\"true\"></div>\n <div id=\"connection\" class=\"connection-pill\" aria-live=\"polite\"><sp
+251: function playStampSound(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC(),duration=.14,length=Math.ceil(ctx.sampleR
+252: </script><script>if(mode==='visitor'){(new Function("'use strict';\nlet person=null,siteState=null,viewStop=0,stationStep={},stationAnswers={},stationHasError={
+253: if(mode==='control'){(new Function("'use strict';\nconst IDB='ttks.sauBen.stageAssets';\nconst assetChannel=('BroadcastChannel' in window)?new BroadcastChannel(
+254: if(mode==='stage'){(new Function("'use strict';\nlet live={activeStation:0,phase:'intro',unlocked:[],stage:{mode:'welcome',slide:1,scene:'song'},counts:{visitor
+=== server.js ===
+118: media: {}
+447: // 9.1 Upload file media gán vào 1 ô sân khấu
+448: app.post('/api/admin/media/upload', requireAdmin, (req, res, next) => {
+460: state.stage.media = state.stage.media || {};
+468: state.stage.media[slot] = {
+483: state.stage.media[slot] = {
+493: return res.json({ ok: true, slot, media: state.stage.media[slot] });
+509: state.stage.media[slot] = {
+518: return res.json({ ok: true, slot, media: state.stage.media[slot] });
+573: // 9.2 Gỡ bỏ media của một ô (quay về mặc định)
+574: app.post('/api/admin/media/remove', requireAdmin, (req, res) => {
+577: if (state.stage.media && state.stage.media[slot]) {
+578: delete state.stage.media[slot];
+=== run_local.py ===
+364: if path == '/api/admin/media/upload':
+385: media_info = {
+401: media_info = {
+408: state.setdefault('stage', {}).setdefault('media', {})[slot] = media_info
+411: return self.send_json({"ok": True, "slot": slot, "media": media_info})
+564: if path == '/api/admin/media/remove':
+566: if slot and 'media' in state.setdefault('stage', {}):
+567: state['stage']['media'].pop(slot, None)
+572: if path == '/api/admin/media/upload':
+594: media_info = {
+601: state.setdefault('stage', {}).setdefault('media', {})[slot] = media_info
+604: return self.send_json({"ok": True, "slot": slot, "media": media_info})

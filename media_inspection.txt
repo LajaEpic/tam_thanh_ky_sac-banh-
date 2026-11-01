@@ -1,0 +1,40 @@
+=== CONTROL CODE ===
+2: const IDB='ttks.sauBen.stageAssets';
+3: const assetChannel=('BroadcastChannel' in window)?new BroadcastChannel('ttks_assets'):null;
+9: function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(IDB,1);r.onupgradeneeded=()=>r.result.createObjectStore('asse
+192: const srvRes=await uploadMediaToServer('book',images,{totalPages:images.length});
+208: const srvRes=await uploadMediaToServer('book',images,{totalPages:total});
+214: const srvRes=await uploadMediaToServer('book',[f],{totalPages:46});
+226: const srvRes=await uploadMediaToServer('video',f);
+231: let localAudioUrl=null;
+232: $('audioFile')?.addEventListener('change',e=>{
+233: const f=e.target.files?.[0];if(!f)return;if(localAudioUrl)URL.revokeObjectURL(localAudioUrl);localAudioUrl=URL.createObjectURL(f);let sa=$('
+245: async function uploadMediaToServer(slot,files,extra={}){
+252: const res=await fetch('/api/admin/media/upload',{method:'POST',headers:{'Authorization':'Bearer '+auth},body:fd});
+265: function handleCardUpload(btn,slot){
+286: const srvRes=await uploadMediaToServer('book',images,{totalPages:total});
+292: const srvRes=await uploadMediaToServer('book',[pdf],{totalPages:46});
+304: const srvRes=await uploadMediaToServer('book',images,{totalPages:images.length});
+314: const srvRes=await uploadMediaToServer(slot,f);
+322: const srvRes=await uploadMediaToServer(slot,f);
+343: handleCardUpload(btn,slot);
+
+=== STAGE CODE ===
+2: let live={activeStation:0,phase:'intro',unlocked:[],stage:{mode:'welcome',slide:1,scene:'song'},counts:{visitors:0,completed:0,stamps:[0,0,0
+3: async function loadAllSlotMedia(){try{const db=await openDB();const store=db.transaction('assets','readonly').objectStore('assets');const sl
+4: const IDB='ttks.sauBen.stageAssets';const ADMIN_TOKEN='ttks.sauBen.admin';
+6: function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(IDB,1);r.onupgradeneeded=()=>r.result.createObjectStore('asse
+26: const sm=live.stage?.media?.['book'];
+33: const o=SCENES[s]||SCENES.song;const slotKey='scene_'+s;const custom=live.stage?.media?.[slotKey]||slotMediaMap[slotKey];
+44: function videoHTML(){const sm=live.stage?.media?.['video']||slotMediaMap['video'];const src=(sm&&sm.url)?sm.url:videoUrl;if(!src)return '<di
+49: if(s.mode==='video'){const curVid=$('projectedVideo'),sm=live.stage?.media?.['video']||slotMediaMap['video'],src=(sm&&sm.url)?sm.url:videoUr
+55: function stateUpdate(s){if(!s?.stage)return;if(s.stage.media?.['book']?.totalPages)stageTotalSlides=s.stage.media['book'].totalPages;const o
+64: document.addEventListener('keydown',e=>{if(e.target.closest('input,audio'))return;if(e.key==='ArrowLeft')stageControl('book',Math.max(1,(ove
+65: const assetChannel=('BroadcastChannel' in window)?new BroadcastChannel('ttks_assets'):null;
+70: }else if(e.data?.action==='slotMedia'){
+71: await loadAllSlotMedia();renderStage()
+72: }else if(e.data?.action==='removeMedia'){
+78: if(slotMediaMap[slot]?.url)URL.revokeObjectURL(slotMediaMap[slot].url);
+79: delete slotMediaMap[slot];
+81: if(live.stage?.media&&live.stage.media[slot])delete live.stage.media[slot];
+88: loadAssets();loadAllSlotMedia();api('/api/state').then(stateUpdate).catch(()=>{});listenUpdates(stateUpdate,()=>{});
