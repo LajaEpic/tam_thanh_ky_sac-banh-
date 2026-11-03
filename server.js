@@ -342,6 +342,7 @@ app.post('/api/fail', (req, res) => {
     person.failed.push(stNum);
     person.failed.sort((a, b) => a - b);
     saveState();
+    broadcast();
   }
   res.json({ ok: true, person: getPersonSummary(person) });
 });
